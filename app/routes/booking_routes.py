@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends
-
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.database.deps import get_db
-
 from app.models.booking_model import Booking
-
 from app.schemas.booking_schema import BookingCreate
 
 router = APIRouter(
@@ -13,6 +11,9 @@ router = APIRouter(
     tags=["Bookings"]
 )
 
+# -------------------------------
+# CREATE BOOKING
+# -------------------------------
 @router.post("/create")
 def create_booking(
     booking: BookingCreate,
@@ -38,6 +39,9 @@ def create_booking(
     }
 
 
+# -------------------------------
+# ACCEPT BOOKING
+# -------------------------------
 @router.put("/accept/{booking_id}")
 def accept_booking(
     booking_id: int,
@@ -49,7 +53,9 @@ def accept_booking(
     ).first()
 
     if not booking:
-        return {"message": "Booking not found"}
+        return {
+            "message": "Booking not found"
+        }
 
     booking.status = "accepted"
 
@@ -58,3 +64,78 @@ def accept_booking(
     return {
         "message": "Booking accepted"
     }
+
+
+# -------------------------------
+# START BOOKING
+# -------------------------------
+@router.put("/start/{booking_id}")
+def start_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        return {
+            "message": "Booking not found"
+        }
+
+    booking.status = "in_progress"
+
+    booking.start_time = datetime.utcnow()
+
+    db.commit()
+
+    return {
+        "message": "Booking started"
+    }
+
+
+# -------------------------------
+# COMPLETE BOOKING
+# -------------------------------
+@router.put("/complete/{booking_id}")
+def complete_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        return {
+            "message": "Booking not found"
+        }
+
+    booking.status = "completed"
+
+    booking.end_time = datetime.utcnow()
+
+    db.commit()
+
+    return {
+        "message": "Booking completed"
+    }
+
+
+# -------------------------------
+# ACTIVE BOOKINGS
+# -------------------------------
+@router.get("/active")
+def active_bookings(
+    db: Session = Depends(get_db)
+):
+
+    bookings = db.query(Booking).filter(
+        Booking.status.in_(
+            ["pending", "accepted", "in_progress"]
+        )
+    ).all()
+
+    return bookings

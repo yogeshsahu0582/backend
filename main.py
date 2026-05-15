@@ -18,6 +18,10 @@ from app.routes.location_routes import router as location_router
 
 from app.routes.booking_routes import router as booking_router
 
+from app.models.sos_model import SOSAlert
+
+from app.routes.sos_routes import router as sos_router
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -36,6 +40,8 @@ app.include_router(protected_router)
 app.include_router(location_router)
 
 app.include_router(booking_router)
+
+app.include_router(sos_router)
 
 @app.get("/")
 def root():
