@@ -2,7 +2,8 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    DateTime
+    DateTime,
+    Boolean
 )
 
 from datetime import datetime
@@ -20,6 +21,31 @@ class SOSAlert(Base):
     triggered_by = Column(String)
 
     message = Column(String)
+
+    emergency_level = Column(
+        String,
+        default="high"
+    )
+
+    admin_notified = Column(
+        Boolean,
+        default=False
+    )
+
+    contacts_notified = Column(
+        Boolean,
+        default=False
+    )
+
+    police_alert_requested = Column(
+        Boolean,
+        default=False
+    )
+
+    status = Column(
+        String,
+        default="active"
+    )
 
     created_at = Column(
         DateTime,

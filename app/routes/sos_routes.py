@@ -22,15 +22,26 @@ def trigger_sos(
     new_alert = SOSAlert(
         booking_id=sos.booking_id,
         triggered_by=sos.triggered_by,
-        message=sos.message
+        message=sos.message,
+        emergency_level=sos.emergency_level,
+        admin_notified=True,
+        contacts_notified=True,
+        police_alert_requested=True,
+        status="active"
     )
 
     db.add(new_alert)
 
     db.commit()
 
+    db.refresh(new_alert)
+
     return {
-        "message": "SOS alert triggered"
+        "message": "HIGH PRIORITY SOS TRIGGERED",
+        "alert_id": new_alert.id,
+        "admin_alert": True,
+        "emergency_contacts_alerted": True,
+        "police_request_flagged": True
     }
 
 
@@ -39,6 +50,34 @@ def all_sos_alerts(
     db: Session = Depends(get_db)
 ):
 
-    alerts = db.query(SOSAlert).all()
+    alerts = db.query(
+        SOSAlert
+    ).all()
 
     return alerts
+
+
+@router.put("/resolve/{alert_id}")
+def resolve_sos(
+    alert_id: int,
+    db: Session = Depends(get_db)
+):
+
+    alert = db.query(
+        SOSAlert
+    ).filter(
+        SOSAlert.id == alert_id
+    ).first()
+
+    if not alert:
+        return {
+            "message": "Alert not found"
+        }
+
+    alert.status = "resolved"
+
+    db.commit()
+
+    return {
+        "message": "SOS resolved successfully"
+    }

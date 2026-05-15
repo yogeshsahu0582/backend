@@ -7,3 +7,5 @@ class SOSCreate(BaseModel):
     triggered_by: str
 
     message: str
+
+    emergency_level: str
