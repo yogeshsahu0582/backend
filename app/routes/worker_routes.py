@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+
 from sqlalchemy.orm import Session
 
 from app.database.deps import get_db
@@ -11,8 +12,6 @@ router = APIRouter(
     prefix="/workers",
     tags=["Workers"]
 )
-
-# ---------------- REGISTER WORKER ---------------- #
 
 @router.post("/register")
 def register_worker(
@@ -38,8 +37,6 @@ def register_worker(
     }
 
 
-# ---------------- GO ONLINE ---------------- #
-
 @router.put("/go-online/{worker_id}")
 def go_online(
     worker_id: int,
@@ -51,8 +48,12 @@ def go_online(
     ).first()
 
     if not worker:
+        return {"message": "Worker not found"}
+
+    if worker.is_blacklisted:
+
         return {
-            "message": "Worker not found"
+            "message": "Blacklisted workers cannot go online"
         }
 
     worker.is_online = True
@@ -63,8 +64,6 @@ def go_online(
         "message": "Worker is now online"
     }
 
-
-# ---------------- GO OFFLINE ---------------- #
 
 @router.put("/go-offline/{worker_id}")
 def go_offline(
@@ -77,9 +76,7 @@ def go_offline(
     ).first()
 
     if not worker:
-        return {
-            "message": "Worker not found"
-        }
+        return {"message": "Worker not found"}
 
     worker.is_online = False
 
@@ -90,7 +87,32 @@ def go_offline(
     }
 
 
-# ---------------- NEARBY WORKERS ---------------- #
+@router.put("/blacklist/{worker_id}")
+def blacklist_worker(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+
+        return {
+            "message": "Worker not found"
+        }
+
+    worker.is_blacklisted = True
+
+    worker.is_online = False
+
+    db.commit()
+
+    return {
+        "message": "Worker blacklisted successfully"
+    }
+
 
 @router.get("/nearby")
 def nearby_workers(
@@ -98,7 +120,8 @@ def nearby_workers(
 ):
 
     workers = db.query(Worker).filter(
-        Worker.is_online == True
+        Worker.is_online == True,
+        Worker.is_blacklisted == False
     ).all()
 
     return workers

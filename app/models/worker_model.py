@@ -34,6 +34,11 @@ class Worker(Base):
         default=False
     )
 
+    is_blacklisted = Column(
+        Boolean,
+        default=False
+    )
+
     rating = Column(
         Float,
         default=5.0
