@@ -8,6 +8,9 @@ from app.models.booking_model import Booking
 
 from app.routes.user_routes import router as user_router
 from app.routes.worker_routes import router as worker_router
+from app.routes.auth_routes import router as auth_router
+
+from app.routes.protected_routes import router as protected_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +22,10 @@ app = FastAPI(
 app.include_router(user_router)
 
 app.include_router(worker_router)
+
+app.include_router(auth_router)
+
+app.include_router(protected_router)
 
 @app.get("/")
 def root():
