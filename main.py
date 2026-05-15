@@ -6,12 +6,19 @@ from app.models.user_model import User
 from app.models.worker_model import Worker
 from app.models.booking_model import Booking
 
+from app.routes.user_routes import router as user_router
+from app.routes.worker_routes import router as worker_router
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PA Backend",
     version="1.0.0"
 )
+
+app.include_router(user_router)
+
+app.include_router(worker_router)
 
 @app.get("/")
 def root():
