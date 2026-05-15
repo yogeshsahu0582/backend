@@ -12,6 +12,8 @@ router = APIRouter(
     tags=["Workers"]
 )
 
+# ---------------- REGISTER WORKER ---------------- #
+
 @router.post("/register")
 def register_worker(
     worker: WorkerCreate,
@@ -34,3 +36,69 @@ def register_worker(
         "message": "Worker Registered Successfully",
         "worker_id": new_worker.id
     }
+
+
+# ---------------- GO ONLINE ---------------- #
+
+@router.put("/go-online/{worker_id}")
+def go_online(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        return {
+            "message": "Worker not found"
+        }
+
+    worker.is_online = True
+
+    db.commit()
+
+    return {
+        "message": "Worker is now online"
+    }
+
+
+# ---------------- GO OFFLINE ---------------- #
+
+@router.put("/go-offline/{worker_id}")
+def go_offline(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        return {
+            "message": "Worker not found"
+        }
+
+    worker.is_online = False
+
+    db.commit()
+
+    return {
+        "message": "Worker is now offline"
+    }
+
+
+# ---------------- NEARBY WORKERS ---------------- #
+
+@router.get("/nearby")
+def nearby_workers(
+    db: Session = Depends(get_db)
+):
+
+    workers = db.query(Worker).filter(
+        Worker.is_online == True
+    ).all()
+
+    return workers

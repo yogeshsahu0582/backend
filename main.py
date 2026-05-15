@@ -12,6 +12,12 @@ from app.routes.auth_routes import router as auth_router
 
 from app.routes.protected_routes import router as protected_router
 
+from app.models.location_model import Location
+
+from app.routes.location_routes import router as location_router
+
+from app.routes.booking_routes import router as booking_router
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -26,6 +32,10 @@ app.include_router(worker_router)
 app.include_router(auth_router)
 
 app.include_router(protected_router)
+
+app.include_router(location_router)
+
+app.include_router(booking_router)
 
 @app.get("/")
 def root():
