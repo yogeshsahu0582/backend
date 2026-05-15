@@ -16,6 +16,7 @@ router = APIRouter(
     tags=["Bookings"]
 )
 
+
 @router.post("/create")
 def create_booking(
     booking: BookingCreate,
@@ -141,3 +142,28 @@ def active_bookings(
     ).all()
 
     return bookings
+
+
+@router.get("/status/{booking_id}")
+def booking_status(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(
+        Booking
+    ).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+
+        return {
+            "message": "Booking not found"
+        }
+
+    return {
+        "booking_id": booking.id,
+        "status": booking.status,
+        "worker_id": booking.worker_id
+    }

@@ -9,6 +9,7 @@ from app.models.worker_model import Worker
 from app.models.booking_model import Booking
 from app.models.payment_model import Payment
 from app.models.sos_model import SOSAlert
+from app.models.location_model import Location
 
 router = APIRouter(
     prefix="/admin",
@@ -60,3 +61,43 @@ def admin_dashboard(
         "platform_revenue": total_revenue,
         "active_sos_alerts": active_sos
     }
+
+
+@router.get("/live-workers")
+def live_workers(
+    db: Session = Depends(get_db)
+):
+
+    workers = db.query(
+        Worker
+    ).filter(
+        Worker.is_online == True
+    ).all()
+
+    return workers
+
+
+@router.get("/live-bookings")
+def live_bookings(
+    db: Session = Depends(get_db)
+):
+
+    bookings = db.query(
+        Booking
+    ).filter(
+        Booking.status.in_(
+            ["accepted", "in_progress"]
+        )
+    ).all()
+
+    return bookings
+
+
+@router.get("/live-locations")
+def live_locations(
+    db: Session = Depends(get_db)
+):
+
+    locations = db.query(Location).all()
+
+    return locations

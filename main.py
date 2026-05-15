@@ -24,6 +24,7 @@ from app.routes.payment_routes import router as payment_router
 from app.routes.notification_routes import router as notification_router
 from app.routes.complaint_routes import router as complaint_router
 from app.routes.admin_routes import router as admin_router
+from app.routes.live_routes import router as live_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -44,6 +45,7 @@ app.include_router(payment_router)
 app.include_router(notification_router)
 app.include_router(complaint_router)
 app.include_router(admin_router)
+app.include_router(live_router)
 
 @app.get("/")
 def root():
