@@ -33,6 +33,8 @@ class Booking(Base):
         default="pending"
     )
 
+    assigned_at = Column(DateTime)
+
     start_time = Column(DateTime)
 
     end_time = Column(DateTime)

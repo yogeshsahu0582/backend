@@ -9,6 +9,7 @@ from app.models.location_model import Location
 from app.models.sos_model import SOSAlert
 from app.models.emergency_contact_model import EmergencyContact
 from app.models.payment_model import Payment
+from app.models.notification_model import Notification
 
 from app.routes.user_routes import router as user_router
 from app.routes.worker_routes import router as worker_router
@@ -19,6 +20,7 @@ from app.routes.booking_routes import router as booking_router
 from app.routes.sos_routes import router as sos_router
 from app.routes.emergency_contact_routes import router as emergency_contact_router
 from app.routes.payment_routes import router as payment_router
+from app.routes.notification_routes import router as notification_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -36,6 +38,7 @@ app.include_router(booking_router)
 app.include_router(sos_router)
 app.include_router(emergency_contact_router)
 app.include_router(payment_router)
+app.include_router(notification_router)
 
 @app.get("/")
 def root():

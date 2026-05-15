@@ -1,9 +1,14 @@
 from fastapi import APIRouter, Depends
+
 from sqlalchemy.orm import Session
+
 from datetime import datetime
 
 from app.database.deps import get_db
+
 from app.models.booking_model import Booking
+from app.models.worker_model import Worker
+
 from app.schemas.booking_schema import BookingCreate
 
 router = APIRouter(
@@ -11,20 +16,34 @@ router = APIRouter(
     tags=["Bookings"]
 )
 
-# -------------------------------
-# CREATE BOOKING
-# -------------------------------
 @router.post("/create")
 def create_booking(
     booking: BookingCreate,
     db: Session = Depends(get_db)
 ):
 
+    available_worker = db.query(
+        Worker
+    ).filter(
+        Worker.is_online == True,
+        Worker.is_busy == False,
+        Worker.skill_type == booking.service_type
+    ).first()
+
+    if not available_worker:
+
+        return {
+            "message": "No available workers found"
+        }
+
+    available_worker.is_busy = True
+
     new_booking = Booking(
         user_id=booking.user_id,
-        worker_id=booking.worker_id,
+        worker_id=available_worker.id,
         service_type=booking.service_type,
-        status="pending"
+        status="accepted",
+        assigned_at=datetime.utcnow()
     )
 
     db.add(new_booking)
@@ -34,52 +53,26 @@ def create_booking(
     db.refresh(new_booking)
 
     return {
-        "message": "Booking created",
-        "booking_id": new_booking.id
+        "message": "Booking assigned successfully",
+        "booking_id": new_booking.id,
+        "worker_id": available_worker.id
     }
 
 
-# -------------------------------
-# ACCEPT BOOKING
-# -------------------------------
-@router.put("/accept/{booking_id}")
-def accept_booking(
-    booking_id: int,
-    db: Session = Depends(get_db)
-):
-
-    booking = db.query(Booking).filter(
-        Booking.id == booking_id
-    ).first()
-
-    if not booking:
-        return {
-            "message": "Booking not found"
-        }
-
-    booking.status = "accepted"
-
-    db.commit()
-
-    return {
-        "message": "Booking accepted"
-    }
-
-
-# -------------------------------
-# START BOOKING
-# -------------------------------
 @router.put("/start/{booking_id}")
 def start_booking(
     booking_id: int,
     db: Session = Depends(get_db)
 ):
 
-    booking = db.query(Booking).filter(
+    booking = db.query(
+        Booking
+    ).filter(
         Booking.id == booking_id
     ).first()
 
     if not booking:
+
         return {
             "message": "Booking not found"
         }
@@ -95,20 +88,20 @@ def start_booking(
     }
 
 
-# -------------------------------
-# COMPLETE BOOKING
-# -------------------------------
 @router.put("/complete/{booking_id}")
 def complete_booking(
     booking_id: int,
     db: Session = Depends(get_db)
 ):
 
-    booking = db.query(Booking).filter(
+    booking = db.query(
+        Booking
+    ).filter(
         Booking.id == booking_id
     ).first()
 
     if not booking:
+
         return {
             "message": "Booking not found"
         }
@@ -117,6 +110,16 @@ def complete_booking(
 
     booking.end_time = datetime.utcnow()
 
+    worker = db.query(
+        Worker
+    ).filter(
+        Worker.id == booking.worker_id
+    ).first()
+
+    if worker:
+
+        worker.is_busy = False
+
     db.commit()
 
     return {
@@ -124,17 +127,16 @@ def complete_booking(
     }
 
 
-# -------------------------------
-# ACTIVE BOOKINGS
-# -------------------------------
 @router.get("/active")
 def active_bookings(
     db: Session = Depends(get_db)
 ):
 
-    bookings = db.query(Booking).filter(
+    bookings = db.query(
+        Booking
+    ).filter(
         Booking.status.in_(
-            ["pending", "accepted", "in_progress"]
+            ["accepted", "in_progress"]
         )
     ).all()
 
