@@ -1,4 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request
+)
 
 from sqlalchemy.orm import Session
 
@@ -12,23 +17,27 @@ from app.schemas.auth_schema import LoginRequest
 
 from app.auth.jwt_handler import create_access_token
 
+from app.middleware.limiter import limiter
+
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"]
 )
 
-# USER LOGIN
 @router.post("/user-login")
+@limiter.limit("5/minute")
 def user_login(
-    request: LoginRequest,
+    request: Request,
+    login_request: LoginRequest,
     db: Session = Depends(get_db)
 ):
 
     user = db.query(User).filter(
-        User.phone == request.phone
+        User.phone == login_request.phone
     ).first()
 
     if not user:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
@@ -48,18 +57,20 @@ def user_login(
     }
 
 
-# WORKER LOGIN
 @router.post("/worker-login")
+@limiter.limit("5/minute")
 def worker_login(
-    request: LoginRequest,
+    request: Request,
+    login_request: LoginRequest,
     db: Session = Depends(get_db)
 ):
 
     worker = db.query(Worker).filter(
-        Worker.phone == request.phone
+        Worker.phone == login_request.phone
     ).first()
 
     if not worker:
+
         raise HTTPException(
             status_code=404,
             detail="Worker not found"

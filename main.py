@@ -1,6 +1,18 @@
 from fastapi import FastAPI
 
+from fastapi.middleware.cors import CORSMiddleware
+
+from slowapi.errors import RateLimitExceeded
+
+from slowapi.middleware import SlowAPIMiddleware
+
+from slowapi.extension import _rate_limit_exceeded_handler
+
 from app.database.connection import Base, engine
+
+from app.middleware.limiter import limiter
+
+from app.middleware.error_handler import global_exception_handler
 
 from app.models.user_model import User
 from app.models.worker_model import Worker
@@ -31,6 +43,30 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="PA Backend",
     version="1.0.0"
+)
+
+app.state.limiter = limiter
+
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler
+)
+
+app.add_exception_handler(
+    Exception,
+    global_exception_handler
+)
+
+app.add_middleware(
+    SlowAPIMiddleware
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 app.include_router(user_router)
