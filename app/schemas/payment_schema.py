@@ -7,3 +7,8 @@ class PaymentCreate(BaseModel):
     total_amount: float
 
     payment_method: str
+
+
+class RazorpayOrderCreate(BaseModel):
+
+    amount: int

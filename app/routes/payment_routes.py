@@ -6,7 +6,14 @@ from app.database.deps import get_db
 
 from app.models.payment_model import Payment
 
-from app.schemas.payment_schema import PaymentCreate
+from app.schemas.payment_schema import (
+    PaymentCreate,
+    RazorpayOrderCreate
+)
+
+from app.services.razorpay_service import (
+    create_razorpay_order
+)
 
 router = APIRouter(
     prefix="/payments",
@@ -14,7 +21,6 @@ router = APIRouter(
 )
 
 PLATFORM_COMMISSION_PERCENT = 7
-
 
 @router.post("/create")
 def create_payment(
@@ -55,24 +61,29 @@ def create_payment(
     }
 
 
-@router.get("/worker-earnings/{worker_id}")
-def worker_earnings(
-    worker_id: int,
+@router.post("/create-order")
+def create_order(
+    payment: RazorpayOrderCreate
+):
+
+    order = create_razorpay_order(
+        payment.amount
+    )
+
+    return {
+        "message": "Razorpay order created",
+        "order": order
+    }
+
+
+@router.get("/history")
+def payment_history(
     db: Session = Depends(get_db)
 ):
 
     payments = db.query(Payment).all()
 
-    total_earnings = 0
-
-    for payment in payments:
-
-        total_earnings += payment.worker_earnings
-
-    return {
-        "worker_id": worker_id,
-        "total_earnings": total_earnings
-    }
+    return payments
 
 
 @router.get("/admin/revenue")
@@ -101,13 +112,3 @@ def admin_revenue(
         "worker_payouts": total_worker_payout,
         "total_transactions": total_transactions
     }
-
-
-@router.get("/history")
-def payment_history(
-    db: Session = Depends(get_db)
-):
-
-    payments = db.query(Payment).all()
-
-    return payments
