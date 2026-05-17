@@ -23,6 +23,7 @@ from app.models.emergency_contact_model import EmergencyContact
 from app.models.payment_model import Payment
 from app.models.notification_model import Notification
 from app.models.complaint_model import Complaint
+from app.models.fcm_token_model import FCMToken
 
 from app.routes.user_routes import router as user_router
 from app.routes.worker_routes import router as worker_router
@@ -37,6 +38,7 @@ from app.routes.notification_routes import router as notification_router
 from app.routes.complaint_routes import router as complaint_router
 from app.routes.admin_routes import router as admin_router
 from app.routes.live_routes import router as live_router
+from app.routes.fcm_routes import router as fcm_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -82,6 +84,7 @@ app.include_router(notification_router)
 app.include_router(complaint_router)
 app.include_router(admin_router)
 app.include_router(live_router)
+app.include_router(fcm_router)
 
 @app.get("/")
 def root():
