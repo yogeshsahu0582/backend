@@ -1,6 +1,12 @@
 venv/
 __pycache__/
+*.pyc
+
 .env
-firebase/
-build/
-*.pycs
+
+firebase/serviceAccountKey.json
+
+.idea/
+.vscode/
+
+*.log
