@@ -7,3 +7,8 @@ class BookingCreate(BaseModel):
     worker_id: int
 
     service_type: str
+
+
+class BookingStatusUpdate(BaseModel):
+
+    status: str

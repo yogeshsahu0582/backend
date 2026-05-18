@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 
 from sqlalchemy.orm import Session
 
+from datetime import datetime
+
 from app.database.deps import get_db
 
 from app.models.location_model import Location
@@ -29,6 +31,8 @@ def update_location(
 
         existing.longitude = location.longitude
 
+        existing.updated_at = datetime.utcnow()
+
     else:
 
         existing = Location(
@@ -42,12 +46,12 @@ def update_location(
     db.commit()
 
     return {
-        "message": "Live location updated"
+        "message": "Location updated successfully"
     }
 
 
-@router.get("/track/{worker_id}")
-def track_worker(
+@router.get("/worker/{worker_id}")
+def worker_location(
     worker_id: int,
     db: Session = Depends(get_db)
 ):
@@ -59,18 +63,19 @@ def track_worker(
     if not location:
 
         return {
-            "message": "Location not found"
+            "message": "Worker location not found"
         }
 
     return {
-        "worker_id": worker_id,
+        "worker_id": location.worker_id,
         "latitude": location.latitude,
-        "longitude": location.longitude
+        "longitude": location.longitude,
+        "updated_at": location.updated_at
     }
 
 
-@router.get("/all-live")
-def all_live_locations(
+@router.get("/all")
+def all_locations(
     db: Session = Depends(get_db)
 ):
 

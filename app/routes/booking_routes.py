@@ -1,50 +1,39 @@
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException
+)
 
 from sqlalchemy.orm import Session
-
-from datetime import datetime
 
 from app.database.deps import get_db
 
 from app.models.booking_model import Booking
-from app.models.worker_model import Worker
 
-from app.schemas.booking_schema import BookingCreate
+from app.schemas.booking_schema import (
+    BookingCreate
+)
+
+from app.services.socket_manager import (
+    manager
+)
 
 router = APIRouter(
     prefix="/bookings",
     tags=["Bookings"]
 )
 
-
 @router.post("/create")
-def create_booking(
+async def create_booking(
     booking: BookingCreate,
     db: Session = Depends(get_db)
 ):
 
-    available_worker = db.query(
-        Worker
-    ).filter(
-        Worker.is_online == True,
-        Worker.is_busy == False,
-        Worker.skill_type == booking.service_type
-    ).first()
-
-    if not available_worker:
-
-        return {
-            "message": "No available workers found"
-        }
-
-    available_worker.is_busy = True
-
     new_booking = Booking(
         user_id=booking.user_id,
-        worker_id=available_worker.id,
+        worker_id=booking.worker_id,
         service_type=booking.service_type,
-        status="accepted",
-        assigned_at=datetime.utcnow()
+        status="pending"
     )
 
     db.add(new_booking)
@@ -53,95 +42,115 @@ def create_booking(
 
     db.refresh(new_booking)
 
+    await manager.broadcast({
+
+        "type": "new_booking",
+
+        "booking_id":
+            new_booking.id,
+
+        "service_type":
+            new_booking.service_type,
+
+        "status":
+            new_booking.status
+    })
+
     return {
-        "message": "Booking assigned successfully",
-        "booking_id": new_booking.id,
-        "worker_id": available_worker.id
+        "message":
+            "Booking created",
+
+        "booking_id":
+            new_booking.id
     }
 
 
-@router.put("/start/{booking_id}")
-def start_booking(
-    booking_id: int,
+@router.get("/pending")
+def pending_bookings(
     db: Session = Depends(get_db)
 ):
 
-    booking = db.query(
-        Booking
-    ).filter(
-        Booking.id == booking_id
-    ).first()
-
-    if not booking:
-
-        return {
-            "message": "Booking not found"
-        }
-
-    booking.status = "in_progress"
-
-    booking.start_time = datetime.utcnow()
-
-    db.commit()
-
-    return {
-        "message": "Booking started"
-    }
-
-
-@router.put("/complete/{booking_id}")
-def complete_booking(
-    booking_id: int,
-    db: Session = Depends(get_db)
-):
-
-    booking = db.query(
-        Booking
-    ).filter(
-        Booking.id == booking_id
-    ).first()
-
-    if not booking:
-
-        return {
-            "message": "Booking not found"
-        }
-
-    booking.status = "completed"
-
-    booking.end_time = datetime.utcnow()
-
-    worker = db.query(
-        Worker
-    ).filter(
-        Worker.id == booking.worker_id
-    ).first()
-
-    if worker:
-
-        worker.is_busy = False
-
-    db.commit()
-
-    return {
-        "message": "Booking completed"
-    }
-
-
-@router.get("/active")
-def active_bookings(
-    db: Session = Depends(get_db)
-):
-
-    bookings = db.query(
-        Booking
-    ).filter(
-        Booking.status.in_(
-            ["accepted", "in_progress"]
-        )
+    bookings = db.query(Booking).filter(
+        Booking.status == "pending"
     ).all()
 
     return bookings
+
+
+@router.put("/accept/{booking_id}")
+async def accept_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    booking.status = "accepted"
+
+    db.commit()
+
+    await manager.broadcast({
+
+        "type": "booking_accepted",
+
+        "booking_id":
+            booking.id,
+
+        "status":
+            booking.status
+    })
+
+    return {
+        "message":
+            "Booking accepted"
+    }
+
+
+@router.put("/reject/{booking_id}")
+async def reject_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    booking.status = "rejected"
+
+    db.commit()
+
+    await manager.broadcast({
+
+        "type": "booking_rejected",
+
+        "booking_id":
+            booking.id,
+
+        "status":
+            booking.status
+    })
+
+    return {
+        "message":
+            "Booking rejected"
+    }
 
 
 @router.get("/status/{booking_id}")
@@ -150,20 +159,21 @@ def booking_status(
     db: Session = Depends(get_db)
 ):
 
-    booking = db.query(
-        Booking
-    ).filter(
+    booking = db.query(Booking).filter(
         Booking.id == booking_id
     ).first()
 
     if not booking:
 
-        return {
-            "message": "Booking not found"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
 
     return {
-        "booking_id": booking.id,
-        "status": booking.status,
-        "worker_id": booking.worker_id
+        "booking_id":
+            booking.id,
+
+        "status":
+            booking.status
     }

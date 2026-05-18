@@ -2,11 +2,8 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    ForeignKey,
-    DateTime
+    Float
 )
-
-from datetime import datetime
 
 from app.database.connection import Base
 
@@ -14,16 +11,17 @@ class Booking(Base):
 
     __tablename__ = "bookings"
 
-    id = Column(Integer, primary_key=True, index=True)
-
-    user_id = Column(
+    id = Column(
         Integer,
-        ForeignKey("users.id")
+        primary_key=True,
+        index=True
     )
+
+    user_id = Column(Integer)
 
     worker_id = Column(
         Integer,
-        ForeignKey("workers.id")
+        nullable=True
     )
 
     service_type = Column(String)
@@ -33,13 +31,7 @@ class Booking(Base):
         default="pending"
     )
 
-    assigned_at = Column(DateTime)
-
-    start_time = Column(DateTime)
-
-    end_time = Column(DateTime)
-
-    created_at = Column(
-        DateTime,
-        default=datetime.utcnow
+    amount = Column(
+        Float,
+        default=0
     )
