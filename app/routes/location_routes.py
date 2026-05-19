@@ -46,7 +46,7 @@ def update_location(
     db.commit()
 
     return {
-        "message": "Location updated successfully"
+        "message": "Live location updated"
     }
 
 
@@ -63,7 +63,7 @@ def worker_location(
     if not location:
 
         return {
-            "message": "Worker location not found"
+            "message": "Location not found"
         }
 
     return {
@@ -72,13 +72,3 @@ def worker_location(
         "longitude": location.longitude,
         "updated_at": location.updated_at
     }
-
-
-@router.get("/all")
-def all_locations(
-    db: Session = Depends(get_db)
-):
-
-    locations = db.query(Location).all()
-
-    return locations

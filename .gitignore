@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 
 .env
+firebase/
 
 firebase/serviceAccountKey.json
 
