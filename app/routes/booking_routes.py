@@ -51,7 +51,9 @@ def create_booking(
 
         longitude=booking.longitude,
 
-        price=booking.price
+        price=booking.price,
+
+        status="pending"
     )
 
     db.add(new_booking)
@@ -61,8 +63,12 @@ def create_booking(
     db.refresh(new_booking)
 
     return {
-        "message": "Booking Created",
-        "booking_id": new_booking.id
+
+        "message":
+            "Booking Created",
+
+        "booking_id":
+            new_booking.id
     }
 
 
@@ -74,6 +80,23 @@ def get_all_bookings(
 
     bookings = db.query(
         Booking
+    ).order_by(
+        Booking.id.desc()
+    ).all()
+
+    return bookings
+
+
+@router.get("/pending")
+
+def get_pending_bookings(
+    db: Session = Depends(get_db)
+):
+
+    bookings = db.query(
+        Booking
+    ).filter(
+        Booking.status == "pending"
     ).all()
 
     return bookings
@@ -82,8 +105,11 @@ def get_all_bookings(
 @router.put("/accept/{booking_id}")
 
 def accept_booking(
+
     booking_id: int,
+
     worker_name: str,
+
     db: Session = Depends(get_db)
 ):
 
@@ -96,7 +122,8 @@ def accept_booking(
     if not booking:
 
         return {
-            "message": "Booking not found"
+            "message":
+                "Booking not found"
         }
 
     booking.worker_name = worker_name
@@ -106,14 +133,17 @@ def accept_booking(
     db.commit()
 
     return {
-        "message": "Booking accepted"
+        "message":
+            "Booking accepted"
     }
 
 
 @router.put("/reject/{booking_id}")
 
 def reject_booking(
+
     booking_id: int,
+
     db: Session = Depends(get_db)
 ):
 
@@ -126,7 +156,8 @@ def reject_booking(
     if not booking:
 
         return {
-            "message": "Booking not found"
+            "message":
+                "Booking not found"
         }
 
     booking.status = "rejected"
@@ -134,5 +165,44 @@ def reject_booking(
     db.commit()
 
     return {
-        "message": "Booking rejected"
+        "message":
+            "Booking rejected"
+    }
+
+
+@router.get("/status/{booking_id}")
+
+def booking_status(
+
+    booking_id: int,
+
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(
+        Booking
+    ).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+
+        return {
+            "message":
+                "Booking not found"
+        }
+
+    return {
+
+        "booking_id":
+            booking.id,
+
+        "status":
+            booking.status,
+
+        "worker_name":
+            booking.worker_name,
+
+        "service_type":
+            booking.service_type,
     }
