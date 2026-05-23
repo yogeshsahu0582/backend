@@ -86,10 +86,6 @@ from app.routes.live_routes import (
     router as live_router
 )
 
-from app.routes.fcm_routes import (
-    router as fcm_router
-)
-
 from app.routes.socket_routes import (
     router as socket_router
 )
@@ -194,10 +190,6 @@ app.include_router(
 
 app.include_router(
     live_router
-)
-
-app.include_router(
-    fcm_router
 )
 
 app.include_router(

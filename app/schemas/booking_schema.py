@@ -1,14 +1,49 @@
 from pydantic import BaseModel
 
+
 class BookingCreate(BaseModel):
 
-    user_id: int
-
-    worker_id: int
+    user_phone: str
 
     service_type: str
 
+    description: str
 
-class BookingStatusUpdate(BaseModel):
+    duration: str
+
+    location: str
+
+    latitude: float
+
+    longitude: float
+
+    price: float
+
+
+class BookingResponse(BaseModel):
+
+    id: int
+
+    user_phone: str
+
+    worker_name: str | None
+
+    service_type: str
+
+    description: str
+
+    duration: str
+
+    location: str
+
+    latitude: float
+
+    longitude: float
+
+    price: float
 
     status: str
+
+    class Config:
+
+        from_attributes = True

@@ -1,11 +1,13 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float
-)
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Float
+from sqlalchemy import DateTime
+
+from datetime import datetime
 
 from app.database.connection import Base
+
 
 class Booking(Base):
 
@@ -17,21 +19,57 @@ class Booking(Base):
         index=True
     )
 
-    user_id = Column(Integer)
+    user_phone = Column(
+        String,
+        nullable=False
+    )
 
-    worker_id = Column(
-        Integer,
+    worker_name = Column(
+        String,
         nullable=True
     )
 
-    service_type = Column(String)
+    service_type = Column(
+        String,
+        nullable=False
+    )
+
+    description = Column(
+        String,
+        nullable=False
+    )
+
+    duration = Column(
+        String,
+        nullable=False
+    )
+
+    location = Column(
+        String,
+        nullable=False
+    )
+
+    latitude = Column(
+        Float,
+        default=0.0
+    )
+
+    longitude = Column(
+        Float,
+        default=0.0
+    )
+
+    price = Column(
+        Float,
+        default=0
+    )
 
     status = Column(
         String,
         default="pending"
     )
 
-    amount = Column(
-        Float,
-        default=0
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
     )
