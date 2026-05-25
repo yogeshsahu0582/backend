@@ -90,6 +90,11 @@ from app.routes.socket_routes import (
     router as socket_router
 )
 
+from app.models.rating_model import Rating
+
+from app.routes.rating_routes import (
+    router as rating_router
+)
 # CREATE DATABASE TABLES
 Base.metadata.create_all(
     bind=engine
@@ -194,6 +199,10 @@ app.include_router(
 
 app.include_router(
     socket_router
+)
+
+app.include_router(
+    rating_router
 )
 
 # ROOT API
