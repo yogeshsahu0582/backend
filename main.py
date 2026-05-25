@@ -95,6 +95,12 @@ from app.models.rating_model import Rating
 from app.routes.rating_routes import (
     router as rating_router
 )
+
+from app.models.wallet_model import Wallet
+
+from app.routes.wallet_routes import (
+    router as wallet_router
+)
 # CREATE DATABASE TABLES
 Base.metadata.create_all(
     bind=engine
@@ -203,6 +209,10 @@ app.include_router(
 
 app.include_router(
     rating_router
+)
+
+app.include_router(
+    wallet_router
 )
 
 # ROOT API
