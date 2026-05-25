@@ -1,74 +1,112 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+from fastapi import Depends
 
 from sqlalchemy.orm import Session
 
-from datetime import datetime
-
-from app.database.deps import get_db
+from app.database.connection import SessionLocal
 
 from app.models.location_model import Location
 
-from app.schemas.location_schema import LocationUpdate
-
 router = APIRouter(
-    prefix="/locations",
-    tags=["Locations"]
+    prefix="/location",
+    tags=["Location"]
 )
 
+
+def get_db():
+
+    db = SessionLocal()
+
+    try:
+        yield db
+
+    finally:
+        db.close()
+
+
 @router.post("/update")
+
 def update_location(
-    location: LocationUpdate,
+
+    booking_id: int,
+
+    worker_name: str,
+
+    latitude: float,
+
+    longitude: float,
+
     db: Session = Depends(get_db)
 ):
 
-    existing = db.query(Location).filter(
-        Location.worker_id == location.worker_id
+    location = db.query(
+        Location
+    ).filter(
+        Location.booking_id == booking_id
     ).first()
 
-    if existing:
+    if location:
 
-        existing.latitude = location.latitude
+        location.latitude = latitude
 
-        existing.longitude = location.longitude
-
-        existing.updated_at = datetime.utcnow()
+        location.longitude = longitude
 
     else:
 
-        existing = Location(
-            worker_id=location.worker_id,
-            latitude=location.latitude,
-            longitude=location.longitude
+        location = Location(
+
+            booking_id=booking_id,
+
+            worker_name=worker_name,
+
+            latitude=latitude,
+
+            longitude=longitude
         )
 
-        db.add(existing)
+        db.add(location)
 
     db.commit()
 
     return {
-        "message": "Live location updated"
+        "message":
+            "Location updated"
     }
 
 
-@router.get("/worker/{worker_id}")
-def worker_location(
-    worker_id: int,
+@router.get("/{booking_id}")
+
+def get_location(
+
+    booking_id: int,
+
     db: Session = Depends(get_db)
 ):
 
-    location = db.query(Location).filter(
-        Location.worker_id == worker_id
+    location = db.query(
+        Location
+    ).filter(
+        Location.booking_id == booking_id
     ).first()
 
     if not location:
 
         return {
-            "message": "Location not found"
+            "message":
+                "No location found"
         }
 
     return {
-        "worker_id": location.worker_id,
-        "latitude": location.latitude,
-        "longitude": location.longitude,
-        "updated_at": location.updated_at
+
+        "worker_name":
+            location.worker_name,
+
+        "latitude":
+            location.latitude,
+
+        "longitude":
+            location.longitude,
+
+        "status":
+            location.status
     }

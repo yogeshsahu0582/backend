@@ -1,13 +1,10 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    Float,
-    DateTime
-)
-
-from datetime import datetime
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import Float
+from sqlalchemy import String
 
 from app.database.connection import Base
+
 
 class Location(Base):
 
@@ -19,16 +16,27 @@ class Location(Base):
         index=True
     )
 
-    worker_id = Column(
+    booking_id = Column(
         Integer,
-        unique=True
+        nullable=False
     )
 
-    latitude = Column(Float)
+    worker_name = Column(
+        String,
+        nullable=False
+    )
 
-    longitude = Column(Float)
+    latitude = Column(
+        Float,
+        default=0
+    )
 
-    updated_at = Column(
-        DateTime,
-        default=datetime.utcnow
+    longitude = Column(
+        Float,
+        default=0
+    )
+
+    status = Column(
+        String,
+        default="moving"
     )
